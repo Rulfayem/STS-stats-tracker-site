@@ -1,0 +1,23 @@
+/* universally keep this please */
+body {
+  margin: 0;
+}
+
+:root {
+  --bg: #ffffff;
+  --text: #213547;
+  --primary: #007bff;
+  --border: #dee2e6;
+  --muted: #6c757d;
+}
+
+/* dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171d;
+    --text: #f3f4f6;
+    --primary: #6ea8fe;
+    --border: #2e303a;
+    --muted: #9ca3af;
+  }
+}
