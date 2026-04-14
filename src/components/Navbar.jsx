@@ -1,4 +1,5 @@
 import "../styles/navbar.css";
+import "../styles/modal.css";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 

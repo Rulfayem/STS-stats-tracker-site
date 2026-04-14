@@ -1,0 +1,46 @@
+/* ===== MODAL STYLING BELOW ===== */
+
+.modal-content {
+    background: linear-gradient(180deg, #121016 0%, #1f1318 100%);
+    border: 1px solid #6b3f2a;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(200, 120, 60, 0.25);
+    color: #f2c572;
+}
+
+.modal-header {
+    border-bottom: 1px solid #6b3f2a;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-title {
+    font-family:
+        "Cinzel",
+        "Georgia",
+        "Times New Roman",
+        serif;
+
+    color: #f2c572;
+    letter-spacing: 0.05em;
+}
+
+.modal-body {
+    color: #ddd;
+}
+
+.btn-close {
+    filter: invert(80%) sepia(20%) saturate(300%) hue-rotate(10deg);
+}
+
+.modal-backdrop.show {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.2s ease-out;
+    transform: translateY(-10px);
+}
+
+.modal.show .modal-dialog {
+    transform: translateY(0);
+}
