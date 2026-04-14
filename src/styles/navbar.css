@@ -1,0 +1,89 @@
+/* ===== NAVBAR STYLING BELOW ===== */
+
+/* main navbar */
+.spire-navbar {
+    background: linear-gradient(180deg, #0b0a0d 0%, #1a0f14 100%);
+    border-bottom: 2px solid #6b3f2a;
+    box-shadow: 0 4px 25px rgba(200, 120, 60, 0.15);
+    padding: 0.6rem 0;
+}
+
+.navbar-brand {
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.03);
+}
+
+.navbar-site-name {
+    font-family:
+        "Cinzel",
+        "Georgia",
+        "Times New Roman",
+        "Garamond",
+        serif;
+
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #f2c572;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 6px rgba(242, 197, 114, 0.4);
+}
+
+.btn-login,
+.btn-signup,
+.btn-logout {
+    font-family:
+        "Segoe UI",
+        "Roboto",
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.45rem 1.2rem;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    transition: all 0.2s ease;
+}
+
+.btn-login {
+    color: #f2c572;
+    background: transparent;
+    border: 1px solid #ca5924;
+}
+
+.btn-login:hover {
+    background: rgba(242, 197, 114, 0.08);
+    border-color: #f2c572;
+    color: #f2c572;
+    box-shadow: 0 0 8px rgba(242, 197, 114, 0.3);
+}
+
+.btn-signup {
+    color: #0b0a0d;
+    background: linear-gradient(135deg, #f2c572, #c88a2a);
+    border: none;
+}
+
+.btn-signup:hover {
+    background: linear-gradient(135deg, #ffd98a, #e0a94a);
+    color: #0b0a0d;
+    box-shadow: 0 0 10px rgba(242, 197, 114, 0.5);
+}
+
+.btn-logout {
+    color: #ff8a8a;
+    background: transparent;
+    border: 1px solid #7a2f2f;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 120, 120, 0.1);
+    border-color: #ff8a8a;
+    color: #ff8a8a;
+    box-shadow: 0 0 8px rgba(255, 120, 120, 0.4);
+}
