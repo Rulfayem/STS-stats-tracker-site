@@ -1,18 +1,20 @@
 /* ===== MODAL STYLING BELOW ===== */
 
 .modal-content {
-    background: linear-gradient(180deg, #121016 0%, #1f1318 100%);
-    border: 1px solid #6b3f2a;
-    border-radius: 10px;
-    box-shadow: 0 0 25px rgba(200, 120, 60, 0.25);
-    color: #f2c572;
+    background: linear-gradient(180deg, #f8e4c9 0%, #f1d3a8 100%);
+    border: 2px solid #b26a4a;
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(120, 60, 40, 0.3);
+    color: #4a2a1f;
 }
 
+/* header */
 .modal-header {
-    border-bottom: 1px solid #6b3f2a;
-    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid #b26a4a;
+    background: rgba(178, 106, 74, 0.15);
 }
 
+/* title */
 .modal-title {
     font-family:
         "Cinzel",
@@ -20,22 +22,26 @@
         "Times New Roman",
         serif;
 
-    color: #f2c572;
+    color: #5a2d1f;
     letter-spacing: 0.05em;
 }
 
+/* body */
 .modal-body {
-    color: #ddd;
+    color: #4a2a1f;
 }
 
+/* close button */
 .btn-close {
-    filter: invert(80%) sepia(20%) saturate(300%) hue-rotate(10deg);
+    filter: none;
 }
 
+/* backdrop */
 .modal-backdrop.show {
-    background-color: rgba(0, 0, 0, 0.75);
+    background-color: rgba(120, 50, 40, 0.5);
 }
 
+/* animation */
 .modal.fade .modal-dialog {
     transition: transform 0.2s ease-out;
     transform: translateY(-10px);

@@ -2,6 +2,8 @@ import "../styles/navbar.css";
 import "../styles/modal.css";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase";
 
 const siteIcon = "/images/Purple-Scrawl-Art.png";
 const siteName = "STS1 Stats Tracker";
@@ -13,8 +15,51 @@ export default function Navbar() {
 
     const [showLogin, setShowLogin] = useState(false);
     const [showSignup, setShowSignup] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
+    const [error, setError] = useState("");
 
     const isLoggedIn = temporaryIsLoggedIn;
+    const validateEmail = (email) => email.includes("@");
+
+    const handleSignup = async () => {
+        setError("");
+
+        if (!email || !password || !username) {
+            return setError("Please fill in all fields.");
+        }
+
+        if (!validateEmail(email)) {
+            return setError("Please enter a valid email address.");
+        }
+
+        try {
+            await createUserWithEmailAndPassword(auth, email, password);
+            setShowSignup(false);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleLogin = async () => {
+        setError("");
+
+        if (!email || !password) {
+            return setError("Please fill in all fields.");
+        }
+
+        if (!validateEmail(email)) {
+            return setError("Please enter a valid email address.");
+        }
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            setShowLogin(false);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
 
     return (
         <>
@@ -71,7 +116,25 @@ export default function Navbar() {
                                     <button className="btn-close" onClick={() => setShowLogin(false)}></button>
                                 </div>
                                 <div className="modal-body">
-                                    <p>Login form goes here</p>
+                                    {/* login form */}
+                                    <input
+                                        type="email"
+                                        placeholder="Email"
+                                        className="form-control mb-2"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Password"
+                                        className="form-control mb-2"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                    {error && <p className="text-danger">{error}</p>}
+                                    <button className="btn btn-primary w-100" onClick={handleLogin}>
+                                        Login
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -91,7 +154,32 @@ export default function Navbar() {
                                     <button className="btn-close" onClick={() => setShowSignup(false)}></button>
                                 </div>
                                 <div className="modal-body">
-                                    <p>Signup form goes here</p>
+                                    {/* signup form */}
+                                    <input
+                                        type="text"
+                                        placeholder="Username"
+                                        className="form-control mb-2"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                    />
+                                    <input
+                                        type="email"
+                                        placeholder="Email"
+                                        className="form-control mb-2"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Password"
+                                        className="form-control mb-2"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                    {error && <p className="text-danger">{error}</p>}
+                                    <button className="btn btn-success w-100" onClick={handleSignup}>
+                                        Sign Up
+                                    </button>
                                 </div>
                             </div>
                         </div>
