@@ -1,65 +1,99 @@
 import "../styles/navbar.css";
 import "../styles/modal.css";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase";
+import { db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const siteIcon = "/images/Purple-Scrawl-Art.png";
 const siteName = "STS1 Stats Tracker";
-
-//temporary placeholder, replace with real firebase auth later
-const temporaryIsLoggedIn = false;
 
 export default function Navbar() {
 
     const [showLogin, setShowLogin] = useState(false);
     const [showSignup, setShowSignup] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+    const [signupEmail, setSignupEmail] = useState("");
+    const [signupPassword, setSignupPassword] = useState("");
     const [username, setUsername] = useState("");
+    const [user, setUser] = useState(null);
     const [error, setError] = useState("");
 
-    const isLoggedIn = temporaryIsLoggedIn;
+    const isLoggedIn = !!user;
     const validateEmail = (email) => email.includes("@");
 
+    //signup function
     const handleSignup = async () => {
         setError("");
 
-        if (!email || !password || !username) {
+        if (!signupEmail || !signupPassword || !username) {
             return setError("Please fill in all fields.");
         }
 
-        if (!validateEmail(email)) {
+        if (!validateEmail(signupEmail)) {
             return setError("Please enter a valid email address.");
         }
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
+            const newUser = userCredential.user;
+
+            await setDoc(doc(db, "users", newUser.uid), {
+                username: username,
+                email: signupEmail,
+            });
+            setSignupEmail("");
+            setSignupPassword("");
+            setUsername("");
             setShowSignup(false);
+            setError("");
         } catch (err) {
             setError(err.message);
         }
     };
 
+    //login function
     const handleLogin = async () => {
         setError("");
 
-        if (!email || !password) {
+        if (!loginEmail || !loginPassword) {
             return setError("Please fill in all fields.");
         }
 
-        if (!validateEmail(email)) {
+        if (!validateEmail(loginEmail)) {
             return setError("Please enter a valid email address.");
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+            setLoginEmail("");
+            setLoginPassword("");
             setShowLogin(false);
+            setError("");
         } catch (err) {
             setError(err.message);
         }
     };
+
+    //logout function
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        const stopListening = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => stopListening();
+    }, []);
 
     return (
         <>
@@ -75,8 +109,10 @@ export default function Navbar() {
                     {/* right side of navbar, login/signup or logout buttons */}
                     <div className="d-flex gap-2">
                         {isLoggedIn ? (
-                            //shows the logout buttin if user is ALREADY logged in
-                            <button className="btn btn-logout">Logout</button>
+                            //shows the logout button if user is ALREADY logged in
+                            <button className="btn btn-logout" onClick={handleLogout}>
+                                Logout
+                            </button>
                         ) : (
                             //shows the login/signup button if user is NOT YET logged in
                             <>
@@ -121,15 +157,15 @@ export default function Navbar() {
                                         type="email"
                                         placeholder="Email"
                                         className="form-control mb-2"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        value={loginEmail}
+                                        onChange={(e) => setLoginEmail(e.target.value)}
                                     />
                                     <input
                                         type="password"
                                         placeholder="Password"
                                         className="form-control mb-2"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        value={loginPassword}
+                                        onChange={(e) => setLoginPassword(e.target.value)}
                                     />
                                     {error && <p className="text-danger">{error}</p>}
                                     <button className="btn btn-primary w-100" onClick={handleLogin}>
@@ -166,15 +202,15 @@ export default function Navbar() {
                                         type="email"
                                         placeholder="Email"
                                         className="form-control mb-2"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        value={signupEmail}
+                                        onChange={(e) => setSignupEmail(e.target.value)}
                                     />
                                     <input
                                         type="password"
                                         placeholder="Password"
                                         className="form-control mb-2"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        value={signupPassword}
+                                        onChange={(e) => setSignupPassword(e.target.value)}
                                     />
                                     {error && <p className="text-danger">{error}</p>}
                                     <button className="btn btn-success w-100" onClick={handleSignup}>
