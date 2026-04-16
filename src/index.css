@@ -52,3 +52,46 @@ body::before {
     --muted: #9ca3af;
   }
 }
+
+/* ===== GOLD RETURN HOME BUTTON in ERROR PAGE ===== */
+
+.btn-error-gold {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #5a1e1e !important;
+  background: linear-gradient(145deg,
+      #ffe8b0 0%,
+      #f2c572 40%,
+      #d89b3c 60%,
+      #b8741a 100%) !important;
+  border: 2px solid #5a1e1e !important;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 255, 255, 0.5),
+    0 4px 10px rgba(200, 140, 60, 0.4);
+  transition: all 0.2s ease;
+}
+
+/* hover effect */
+.btn-error-gold:hover {
+  background: linear-gradient(145deg,
+      #fff0c2 0%,
+      #ffd98a 40%,
+      #e6a94a 60%,
+      #c47f2a 100%) !important;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.6),
+    0 6px 14px rgba(200, 140, 60, 0.6);
+}
+
+/* clicked */
+.btn-error-gold:active {
+  transform: translateY(0);
+
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
