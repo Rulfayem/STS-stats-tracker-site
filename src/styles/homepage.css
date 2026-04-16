@@ -1,0 +1,90 @@
+/* ===== HOMEPAGE STYLING ===== */
+
+/* wrapper that centers everything vertically and adds padding */
+.homepage-wrapper {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+/* main title */
+.homepage-heading {
+    font-family: "Cinzel", "Georgia", serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #f2c572;
+    text-shadow: 0 0 20px rgba(242, 197, 114, 0.5), 0 2px 6px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.08em;
+}
+
+/* subtitle under the main title */
+.homepage-subheading {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 1.1rem;
+    color: #d4b896;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* each character card */
+.character-card {
+    background: rgba(20, 10, 8, 0.75);
+    border: 2px solid #6b3f2a;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    overflow: hidden;
+    text-align: center;
+}
+
+/* hover effect on the card */
+.character-card:hover {
+    transform: translateY(-6px);
+    border-color: #f2c572;
+    box-shadow: 0 8px 30px rgba(242, 197, 114, 0.3);
+}
+
+/* wrapper for the character image */
+.character-image-wrapper {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+}
+
+/* each character's sprite image */
+.character-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6));
+    transition: transform 0.2s ease;
+}
+
+/* image grows slightly on hover, popout */
+.character-card:hover .character-image {
+    transform: scale(1.05);
+}
+
+/* text section below the image */
+.character-info {
+    padding: 16px;
+    border-top: 1px solid #6b3f2a;
+}
+
+/* character name */
+.character-name {
+    font-family: "Cinzel", "Georgia", serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f2c572;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+}
+
+/* short description under the name */
+.character-description {
+    font-size: 0.85rem;
+    color: #b0907a;
+    margin: 0;
+    line-height: 1.4;
+}
