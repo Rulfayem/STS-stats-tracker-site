@@ -1,11 +1,11 @@
 import "../styles/navbar.css";
 import "../styles/modal.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../firebase";
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { Modal, Button } from "react-bootstrap";
 
 const siteIcon = "/images/Purple-Scrawl-Art.png";
 const siteName = "STS1 Stats Tracker";
@@ -20,21 +20,25 @@ export default function Navbar() {
     const [signupPassword, setSignupPassword] = useState("");
     const [username, setUsername] = useState("");
     const [user, setUser] = useState(null);
-    const [error, setError] = useState("");
+    const [loginError, setLoginError] = useState("");
+    const [signupError, setSignupError] = useState("");
 
     const isLoggedIn = !!user;
     const validateEmail = (email) => email.includes("@");
 
+    const location = useLocation();
+    const isUploadPage = location.pathname === "/upload";
+
     //signup function
     const handleSignup = async () => {
-        setError("");
+        setSignupError("");
 
         if (!signupEmail || !signupPassword || !username) {
-            return setError("Please fill in all fields.");
+            return setSignupError("Please fill in all fields.");
         }
 
         if (!validateEmail(signupEmail)) {
-            return setError("Please enter a valid email address.");
+            return setSignupError("Please enter a valid email address.");
         }
 
         try {
@@ -45,36 +49,40 @@ export default function Navbar() {
                 username: username,
                 email: signupEmail,
             });
+
+            //clear fields and close modal on success
             setSignupEmail("");
             setSignupPassword("");
             setUsername("");
             setShowSignup(false);
-            setError("");
+            setSignupError("");
         } catch (err) {
-            setError(err.message);
+            setSignupError(err.message);
         }
     };
 
     //login function
     const handleLogin = async () => {
-        setError("");
+        setLoginError("");
 
         if (!loginEmail || !loginPassword) {
-            return setError("Please fill in all fields.");
+            return setLoginError("Please fill in all fields.");
         }
 
         if (!validateEmail(loginEmail)) {
-            return setError("Please enter a valid email address.");
+            return setLoginError("Please enter a valid email address.");
         }
 
         try {
             await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+
+            //clear fields and close modal on success
             setLoginEmail("");
             setLoginPassword("");
             setShowLogin(false);
-            setError("");
+            setLoginError("");
         } catch (err) {
-            setError(err.message);
+            setLoginError(err.message);
         }
     };
 
@@ -87,48 +95,65 @@ export default function Navbar() {
         }
     };
 
+    //listens for auth state changes (whether user logs in or out)
     useEffect(() => {
         const stopListening = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
         });
-
         return () => stopListening();
     }, []);
 
     return (
         <>
+            {/* NAVBAR */}
             <nav className="navbar spire-navbar sticky-top">
-                <div className="container-fluid px-4">
+                <div className="container-fluid px-4 d-flex align-items-center justify-content-between">
 
-                    {/* left side of navbar, site logo and site name */}
+                    {/* LEFT SIDE - logo and site name */}
                     <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
                         <img src={siteIcon} alt="Site Logo" style={{ height: "36px", width: "36px", objectFit: "contain" }} />
                         <span className="navbar-site-name">{siteName}</span>
                     </Link>
 
-                    {/* right side of navbar, login/signup or logout buttons */}
+                    {/* MIDDLE - upload run button (hidden on upload page) */}
+                    <div className="d-flex flex-grow-1 justify-content-center">
+                        {!isUploadPage && (
+                            isLoggedIn ? (
+                                <Link to="/upload" className="btn btn-upload-run">
+                                    Upload Run
+                                </Link>
+                            ) : (
+                                <button className="btn btn-upload-run" disabled>
+                                    Upload Run
+                                </button>
+                            )
+                        )}
+                    </div>
+
+                    {/* RIGHT SIDE - login/signup or logout */}
                     <div className="d-flex gap-2">
                         {isLoggedIn ? (
-                            //shows the logout button if user is ALREADY logged in
                             <button className="btn btn-logout" onClick={handleLogout}>
                                 Logout
                             </button>
                         ) : (
-                            //shows the login/signup button if user is NOT YET logged in
                             <>
                                 <button
                                     className="btn btn-login"
                                     onClick={() => {
+                                        setLoginError("");
+                                        setSignupError("");
                                         setShowSignup(false);
                                         setShowLogin(true);
                                     }}
                                 >
                                     Login
                                 </button>
-
                                 <button
                                     className="btn btn-signup"
                                     onClick={() => {
+                                        setSignupError("");
+                                        setLoginError("");
                                         setShowLogin(false);
                                         setShowSignup(true);
                                     }}
@@ -138,91 +163,73 @@ export default function Navbar() {
                             </>
                         )}
                     </div>
+
                 </div>
             </nav>
 
-            {/* modal for LOGIN */}
-            {showLogin && (
-                <>
-                    <div className="modal fade show" style={{ display: "block" }}>
-                        <div className="modal-dialog">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Login</h5>
-                                    <button className="btn-close" onClick={() => setShowLogin(false)}></button>
-                                </div>
-                                <div className="modal-body">
-                                    {/* login form */}
-                                    <input
-                                        type="email"
-                                        placeholder="Email"
-                                        className="form-control mb-2"
-                                        value={loginEmail}
-                                        onChange={(e) => setLoginEmail(e.target.value)}
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        className="form-control mb-2"
-                                        value={loginPassword}
-                                        onChange={(e) => setLoginPassword(e.target.value)}
-                                    />
-                                    {error && <p className="text-danger">{error}</p>}
-                                    <button className="btn btn-primary w-100" onClick={handleLogin}>
-                                        Login
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="modal-backdrop fade show" onClick={() => setShowLogin(false)}></div>
-                </>
-            )}
+            {/* LOGIN MODAL*/}
+            <Modal show={showLogin} onHide={() => { setShowLogin(false); setLoginError(""); }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Login</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        className="form-control mb-2"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        className="form-control mb-2"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                    />
 
-            {/* modal for SIGNUP */}
-            {showSignup && (
-                <>
-                    <div className="modal fade show" style={{ display: "block" }}>
-                        <div className="modal-dialog">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">Sign Up</h5>
-                                    <button className="btn-close" onClick={() => setShowSignup(false)}></button>
-                                </div>
-                                <div className="modal-body">
-                                    {/* signup form */}
-                                    <input
-                                        type="text"
-                                        placeholder="Username"
-                                        className="form-control mb-2"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                    />
-                                    <input
-                                        type="email"
-                                        placeholder="Email"
-                                        className="form-control mb-2"
-                                        value={signupEmail}
-                                        onChange={(e) => setSignupEmail(e.target.value)}
-                                    />
-                                    <input
-                                        type="password"
-                                        placeholder="Password"
-                                        className="form-control mb-2"
-                                        value={signupPassword}
-                                        onChange={(e) => setSignupPassword(e.target.value)}
-                                    />
-                                    {error && <p className="text-danger">{error}</p>}
-                                    <button className="btn btn-success w-100" onClick={handleSignup}>
-                                        Sign Up
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="modal-backdrop fade show" onClick={() => setShowSignup(false)}></div>
-                </>
-            )}
+                    {/* show error message if there is one */}
+                    {loginError && <p className="text-danger">{loginError}</p>}
+                    <Button className="w-100" onClick={handleLogin}>
+                        Login
+                    </Button>
+                </Modal.Body>
+            </Modal>
+
+            {/* SIGNUP MODAL */}
+            <Modal show={showSignup} onHide={() => { setShowSignup(false); setSignupError(""); }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Sign Up</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        className="form-control mb-2"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        className="form-control mb-2"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        className="form-control mb-2"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                    />
+                    {/* show error message if there is one */}
+                    {signupError && <p className="text-danger">{signupError}</p>}
+                    <Button variant="success" className="w-100" onClick={handleSignup}>
+                        Sign Up
+                    </Button>
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

@@ -3,12 +3,13 @@ import Navbar from "./components/Navbar";
 
 //all page imports
 import HomePage from "./pages/HomePage";
-import IroncladPageStats from "./pages/IroncladPageStats";
-import SilentPageStats from "./pages/SilentPageStats";
-import DefectPageStats from "./pages/DefectPageStats";
-import WatcherPageStats from "./pages/WatcherPageStats";
+import IroncladStatsPage from "./pages/IroncladStatsPage";
+import SilentStatsPage from "./pages/SilentStatsPage";
+import DefectStatsPage from "./pages/DefectStatsPage";
+import WatcherStatsPage from "./pages/WatcherStatsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ErrorPage from "./pages/ErrorPage";
+import UploadRunPage from "./pages/UploadRunPage";
 
 function App() {
   return (
@@ -16,11 +17,12 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/character/ironclad" element={<IroncladPageStats />} />
-        <Route path="/character/silent" element={<SilentPageStats />} />
-        <Route path="/character/defect" element={<DefectPageStats />} />
-        <Route path="/character/watcher" element={<WatcherPageStats />} />
+        <Route path="/character/ironclad" element={<IroncladStatsPage />} />
+        <Route path="/character/silent" element={<SilentStatsPage />} />
+        <Route path="/character/defect" element={<DefectStatsPage />} />
+        <Route path="/character/watcher" element={<WatcherStatsPage />} />
         <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route path="/upload" element={<UploadRunPage />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </>
