@@ -107,7 +107,7 @@ export default function Navbar() {
         <>
             {/* NAVBAR */}
             <nav className="navbar spire-navbar sticky-top">
-                <div className="container-fluid px-4 d-flex align-items-center justify-content-between">
+                <div className="container-fluid px-4 d-flex align-items-center position-relative">
 
                     {/* LEFT SIDE - logo and site name */}
                     <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
@@ -116,17 +116,20 @@ export default function Navbar() {
                     </Link>
 
                     {/* MIDDLE - upload run button (hidden on upload page) */}
-                    <div className="d-flex flex-grow-1 justify-content-center">
+                    <div
+                        className="position-absolute top-50 start-50 translate-middle"
+                        style={{ width: "200px", textAlign: "center" }}
+                    >
                         {!isUploadPage && (
-                            isLoggedIn ? (
-                                <Link to="/upload" className="btn btn-upload-run">
-                                    Upload Run
-                                </Link>
-                            ) : (
-                                <button className="btn btn-upload-run" disabled>
-                                    Upload Run
-                                </button>
-                            )
+                            <Link
+                                to={isLoggedIn ? "/upload" : "#"}
+                                className={`btn btn-upload-run ${!isLoggedIn ? "disabled-btn" : ""}`}
+                                onClick={(e) => {
+                                    if (!isLoggedIn) e.preventDefault();
+                                }}
+                            >
+                                Upload Run
+                            </Link>
                         )}
                     </div>
 
