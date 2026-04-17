@@ -65,14 +65,90 @@ export default function UploadRunPage() {
             const text = await runFile.text();
             const data = JSON.parse(text);
             console.log(data);
-            const extracted = {
-                victory: data.victory,
-                character: data.character_chosen,
-                floorReached: data.floor_reached,
-                cards: data.card_choices,
-                relics: data.relics,
-            };
 
+            //will observe if might need to change some of these
+            const extracted = {
+                //VITAL RUN INFO
+                character: data.character_chosen,
+                ascension: data.ascension_level,
+                floorReached: data.floor_reached,
+                victory: data.victory,
+                playtime: data.playtime,
+                playId: data.play_id,
+
+                //NEOW BONUS
+                neow: {
+                    bonus: data.neow_bonus,
+                    cost: data.neow_cost,
+                    bonusLog: data.neow_bonus_log,
+                    skippedBonuses: data.neow_bonuses_skipped_log,
+                    skippedCosts: data.neow_costs_skipped_log,
+                },
+
+                //DECK
+                deck: {
+                    final: data.master_deck,
+                    choices: data.card_choices,
+                },
+
+                //RELICS
+                relics: {
+                    final: data.relics,
+                    obtained: data.relics_obtained,
+                    bossChoices: data.boss_relics,
+                },
+
+                //POTIONS
+                potions: {
+                    obtained: data.potions_obtained,
+                    spawnedPerFloor: data.potions_floor_spawned,
+                    used: data.potions_floor_usage,
+                    usagePerFloor: data.potion_use_per_floor,
+                    discarded: data.potion_discard_per_floor,
+                },
+
+                //CAMPFIRES
+                campfire: {
+                    choices: data.campfire_choices,
+                },
+
+                //MERCHANT 
+                shop: {
+                    purchased: data.items_purchased,
+                    purchaseFloors: data.item_purchase_floors,
+                    purged: data.items_purged,
+                    purgedFloors: data.items_purged_floors,
+                    contents: data.shop_contents,
+                },
+
+                //PATHING
+                path: {
+                    taken: data.path_taken,
+                    perFloor: data.path_per_floor,
+                },
+
+                //GOLD & HP per FLOOR
+                stats: {
+                    currentHpPerFloor: data.current_hp_per_floor,
+                    maxHpPerFloor: data.max_hp_per_floor,
+                    goldPerFloor: data.gold_per_floor,
+                    finalGold: data.gold,
+                },
+
+                //COMBAT ENCOUNTERS
+                combat: {
+                    damageTaken: data.damage_taken,
+                },
+
+                //EVENTS
+                events: data.event_choices,
+
+                //ACT 4 KEYS
+                keys: {
+                    green: data.green_key_taken_log,
+                    blue: data.blue_key_relic_skipped_log,
+                },
+            };
             console.log("EXTRACTED:", extracted);
             const storageRef = ref(
                 storage,
