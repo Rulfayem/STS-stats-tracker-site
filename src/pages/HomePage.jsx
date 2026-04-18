@@ -30,7 +30,6 @@ const characters = [
 ];
 
 export default function HomePage() {
-
     const navigate = useNavigate();
 
     return (
@@ -48,7 +47,7 @@ export default function HomePage() {
             <div className="container">
                 <div className="row justify-content-center g-4">
 
-                    {/* loop through each character and make a card */}
+                    {/* loops through each character to make respective card */}
                     {characters.map((character) => (
                         <div className="col-12 col-sm-6 col-lg-3" key={character.name}>
                             <div

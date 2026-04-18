@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require("../db");
 
 
-//adds favourite card or relic for user
+//add favourite card or relic for user
 router.post("/", async (req, res) => {
     const { user_id, item_name, item_type } = req.body;
 
@@ -64,7 +64,7 @@ router.put("/:id", async (req, res) => {
             [item_name, id]
         );
 
-        //cheks if favourite exists
+        //checks if favourite exists
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "Favourite not found." });
         }

@@ -1,0 +1,184 @@
+/* ===== PROFILE PAGE STYLING ===== */
+
+/* loading / not found message */
+.profile-loading {
+    text-align: center;
+    padding: 100px 20px;
+    color: #b0907a;
+    font-size: 1.2rem;
+}
+
+/* outer wrapper */
+.profile-wrapper {
+    min-height: 90vh;
+    padding-bottom: 60px;
+}
+
+/* PROFILE BANNER  */
+.profile-banner-section {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+/* banner image */
+.profile-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* dark overlay on top of the banner */
+.profile-banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+/* profile picture and username on top of the banner */
+.profile-identity {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* profile picture circle */
+.profile-pfp {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #d4a373;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* username on banner */
+.profile-username {
+    font-family: "Georgia", serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff3d6;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    margin: 0;
+}
+
+/* small badge showing "Your Profile" */
+.profile-own-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #5a1e1e;
+    background: #f2c572;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+}
+
+/* DIVIDER */
+.profile-divider {
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #6b3f2a, transparent);
+    margin-bottom: 30px;
+}
+
+/* STATS SECTION */
+.profile-stats-section {
+    padding-top: 10px;
+}
+
+/* section title */
+.profile-section-title {
+    font-family: "Georgia", serif;
+    color: #f2c572;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 0.04em;
+}
+
+/* individual card stats */
+.stat-card {
+    background: rgba(20, 10, 8, 0.75);
+    border: 1px solid #6b3f2a;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #b0907a;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f2c572;
+    margin: 0;
+}
+
+/* green for wins */
+.stat-wins {
+    color: #5cb85c;
+}
+
+/* red for losses */
+.stat-losses {
+    color: #d9534f;
+}
+
+/* CHARACTER CARD STATS */
+.character-stat-card {
+    background: rgba(20, 10, 8, 0.75);
+    border: 1px solid #6b3f2a;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.character-stat-card:hover {
+    border-color: #f2c572;
+    transform: translateY(-3px);
+}
+
+/* character sprite in the stat card */
+.char-stat-image {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+/* character name */
+.char-stat-name {
+    font-family: "Georgia", serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #f2c572;
+    margin-bottom: 4px;
+}
+
+/* win rate percentage */
+.char-stat-winrate {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff3d6;
+    margin-bottom: 2px;
+}
+
+/* number of runs */
+.char-stat-runs {
+    font-size: 0.8rem;
+    color: #b0907a;
+    margin: 0;
+}

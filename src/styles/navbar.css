@@ -95,6 +95,34 @@
     box-shadow: 0 4px 12px rgba(177, 58, 58, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3) !important;
 }
 
+/* profile picture */
+.navbar-pfp {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #d4a373;
+}
+
+/* username text in navbar */
+.navbar-username {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff3d6;
+    letter-spacing: 0.03em;
+}
+
+/* the link wrapping pfp + username */
+.navbar-user-link:hover .navbar-username {
+    color: #f2c572;
+}
+
+.navbar-user-link:hover .navbar-pfp {
+    border-color: #f2c572;
+}
+
+
 /* upload run button */
 .btn-upload-run {
     color: #fff3d6;

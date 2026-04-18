@@ -3,14 +3,14 @@ import { storage } from "../firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { auth } from "../firebase";
 
-// the URL of our backend — stored in .env so its easy to change when we deploy
+//the URL of our backend stored in .env so its easy to change when we deploy
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UploadRunPage() {
     const [runFile, setRunFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [message, setMessage] = useState(""); // shows success or error message to user
+    const [message, setMessage] = useState("");
     const fileInputRef = useRef(null);
 
     const isValidFile = (file) => {
@@ -60,18 +60,16 @@ export default function UploadRunPage() {
 
         const user = auth.currentUser;
         if (!user) return setMessage("You must be logged in to upload.");
-
         setIsUploading(true);
         setMessage("");
 
         try {
-            // step 1 — read and parse the file
+            //reads and parses files
             const text = await runFile.text();
             const data = JSON.parse(text);
 
-            // step 2 — extract the data we want to store
+            //extracts certain desired data (can always update)
             const extracted = {
-                // we also send the user_id so backend knows who uploaded it
                 user_id: user.uid,
 
                 //VITAL RUN INFO
@@ -156,7 +154,7 @@ export default function UploadRunPage() {
                 },
             };
 
-            // step 3 — send extracted data to our Express backend to save in Neon
+            //sends extracted data to backend to store in neon database
             const response = await fetch(`${API_URL}/api/runs`, {
                 method: "POST",
                 headers: {
@@ -167,28 +165,25 @@ export default function UploadRunPage() {
 
             const result = await response.json();
 
-            // if backend returned an error (like duplicate run)
             if (!response.ok) {
                 setMessage(result.error || "Failed to save run.");
                 setIsUploading(false);
                 return;
             }
 
-            // step 4 — also upload the raw file to Firebase Storage as a backup
+            //backup file sent to firebase storage
             const storageRef = ref(storage, `runs/${user.uid}/${Date.now()}-${runFile.name}`);
             await uploadBytes(storageRef, runFile);
 
-            // step 5 — all done! reset everything
+
             setMessage("Run uploaded successfully!");
             setRunFile(null);
             fileInputRef.current.value = "";
             setIsDragging(false);
-
         } catch (err) {
             console.error(err);
             setMessage("Something went wrong. Please try again.");
         }
-
         setIsUploading(false);
     };
 

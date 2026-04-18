@@ -38,7 +38,7 @@
     text-align: center;
 }
 
-/* hover effect on the card */
+/* hover effect on character card */
 .character-card:hover {
     transform: translateY(-6px);
     border-color: #f2c572;
@@ -60,7 +60,7 @@
     transition: transform 0.2s ease;
 }
 
-/* image grows slightly on hover, popout */
+/* image popout slightly on hover */
 .character-card:hover .character-image {
     transform: scale(1.05);
 }

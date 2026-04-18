@@ -4,6 +4,7 @@ const pool = require("../db");
 
 
 //receives parsed run data from frontend and saves it into the neon database
+//might change over time
 router.post("/", async (req, res) => {
     const {
         user_id,
@@ -26,7 +27,7 @@ router.post("/", async (req, res) => {
         keys,
     } = req.body;
 
-    //make sure the important fields are present
+    //makes sure the important fields are present
     if (!user_id || !play_id || !character) {
         return res.status(400).json({ error: "Missing required fields." });
     }
@@ -62,7 +63,7 @@ router.post("/", async (req, res) => {
             ]
         );
 
-        //if run was uploaded previously
+        //ignores dupplicate runs
         if (result.rows.length === 0) {
             return res.status(409).json({ error: "This run has already been uploaded." });
         }

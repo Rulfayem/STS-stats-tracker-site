@@ -1,17 +1,21 @@
 import "../styles/navbar.css";
 import "../styles/modal.css";
 import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+import { useState } from "react";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
+import { useUser } from "../context/UserContext";
 
 const siteIcon = "/images/Purple-Scrawl-Art.png";
 const siteName = "STS1 Stats Tracker";
+const defaultPFP = "/images/Ironclad-PFP.png";
 
 export default function Navbar() {
 
+    const { user, userProfile } = useUser();
+    const isLoggedIn = !!user;
     const [showLogin, setShowLogin] = useState(false);
     const [showSignup, setShowSignup] = useState(false);
     const [loginEmail, setLoginEmail] = useState("");
@@ -19,13 +23,10 @@ export default function Navbar() {
     const [signupEmail, setSignupEmail] = useState("");
     const [signupPassword, setSignupPassword] = useState("");
     const [username, setUsername] = useState("");
-    const [user, setUser] = useState(null);
     const [loginError, setLoginError] = useState("");
     const [signupError, setSignupError] = useState("");
 
-    const isLoggedIn = !!user;
     const validateEmail = (email) => email.includes("@");
-
     const location = useLocation();
     const isUploadPage = location.pathname === "/upload";
 
@@ -48,9 +49,9 @@ export default function Navbar() {
             await setDoc(doc(db, "users", newUser.uid), {
                 username: username,
                 email: signupEmail,
+                profilePicture: "",
+                bannerImage: "",
             });
-
-            //clear fields and close modal on success
             setSignupEmail("");
             setSignupPassword("");
             setUsername("");
@@ -75,8 +76,6 @@ export default function Navbar() {
 
         try {
             await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-
-            //clear fields and close modal on success
             setLoginEmail("");
             setLoginPassword("");
             setShowLogin(false);
@@ -94,14 +93,6 @@ export default function Navbar() {
             console.error(err);
         }
     };
-
-    //listens for auth state changes (whether user logs in or out)
-    useEffect(() => {
-        const stopListening = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-        });
-        return () => stopListening();
-    }, []);
 
     return (
         <>
@@ -124,21 +115,39 @@ export default function Navbar() {
                             <Link
                                 to={isLoggedIn ? "/upload" : "#"}
                                 className={`btn btn-upload-run ${!isLoggedIn ? "disabled-btn" : ""}`}
-                                onClick={(e) => {
-                                    if (!isLoggedIn) e.preventDefault();
-                                }}
+                                onClick={(e) => { if (!isLoggedIn) e.preventDefault(); }}
                             >
                                 Upload Run
                             </Link>
                         )}
                     </div>
 
-                    {/* RIGHT SIDE - login/signup or logout */}
-                    <div className="d-flex gap-2">
+                    {/* RIGHT SIDE - login/signup or user info + logout */}
+                    <div className="d-flex align-items-center gap-2 ms-auto">
                         {isLoggedIn ? (
-                            <button className="btn btn-logout" onClick={handleLogout}>
-                                Logout
-                            </button>
+                            <>
+                                {/* clicking the picture or username takes you to your profile */}
+                                <Link
+                                    to={`/profile/${userProfile?.username}`}
+                                    className="d-flex align-items-center gap-2 text-decoration-none navbar-user-link"
+                                >
+                                    {/* profile picture */}
+                                    <img
+                                        src={userProfile?.profilePicture || defaultPFP}
+                                        alt="Profile"
+                                        className="navbar-pfp"
+                                    />
+                                    {/* username */}
+                                    <span className="navbar-username">
+                                        {userProfile?.username || "Player"}
+                                    </span>
+                                </Link>
+
+                                {/* logout button */}
+                                <button className="btn btn-logout" onClick={handleLogout}>
+                                    Logout
+                                </button>
+                            </>
                         ) : (
                             <>
                                 <button
@@ -170,7 +179,7 @@ export default function Navbar() {
                 </div>
             </nav>
 
-            {/* LOGIN MODAL*/}
+            {/* LOGIN MODAL */}
             <Modal show={showLogin} onHide={() => { setShowLogin(false); setLoginError(""); }} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Login</Modal.Title>
@@ -190,12 +199,10 @@ export default function Navbar() {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                     />
-
-                    {/* show error message if there is one */}
                     {loginError && <p className="text-danger">{loginError}</p>}
-                    <Button className="w-100" onClick={handleLogin}>
+                    <button className="btn btn-primary w-100" onClick={handleLogin}>
                         Login
-                    </Button>
+                    </button>
                 </Modal.Body>
             </Modal>
 
@@ -226,11 +233,10 @@ export default function Navbar() {
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                     />
-                    {/* show error message if there is one */}
                     {signupError && <p className="text-danger">{signupError}</p>}
-                    <Button variant="success" className="w-100" onClick={handleSignup}>
+                    <button className="btn btn-success w-100" onClick={handleSignup}>
                         Sign Up
-                    </Button>
+                    </button>
                 </Modal.Body>
             </Modal>
         </>
