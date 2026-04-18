@@ -1,26 +1,31 @@
 import { useState, useRef } from "react";
 import { storage } from "../firebase";
 import { ref, uploadBytes } from "firebase/storage";
-import { auth, } from "../firebase";
+import { auth } from "../firebase";
+
+// the URL of our backend — stored in .env so its easy to change when we deploy
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UploadRunPage() {
     const [runFile, setRunFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [message, setMessage] = useState(""); // shows success or error message to user
     const fileInputRef = useRef(null);
 
     const isValidFile = (file) => {
-        return file.name.endsWith(".run") || file.name.endsWith(".json"); //might have to change later after testing
+        return file.name.endsWith(".run") || file.name.endsWith(".json");
     };
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
-
         if (!isValidFile(selectedFile)) {
-            alert("Only .run or .json files allowed!");
+            setMessage("Only .run or .json files allowed!");
             return;
         }
         setRunFile(selectedFile);
+        setMessage("");
     };
 
     const handleDragOver = (e) => {
@@ -37,12 +42,12 @@ export default function UploadRunPage() {
         setIsDragging(false);
         const file = e.dataTransfer.files[0];
         if (!file) return;
-
         if (!isValidFile(file)) {
-            alert("Only .run or .json files allowed!");
+            setMessage("Only .run or .json files allowed!");
             return;
         }
         setRunFile(file);
+        setMessage("");
     };
 
     const handleClick = () => {
@@ -50,31 +55,32 @@ export default function UploadRunPage() {
     };
 
     const handleUpload = async () => {
-        if (!runFile) return alert("No file selected");
+        if (!runFile) return setMessage("No file selected.");
+        if (!isValidFile(runFile)) return setMessage("Only .run or .json files are allowed!");
 
-        if (!isValidFile(runFile)) {
-            return alert("Only .run or .json files are allowed!");
-        }
+        const user = auth.currentUser;
+        if (!user) return setMessage("You must be logged in to upload.");
+
+        setIsUploading(true);
+        setMessage("");
 
         try {
-            const user = auth.currentUser;
-            if (!user) {
-                alert("You must be logged in to upload.");
-                return;
-            }
+            // step 1 — read and parse the file
             const text = await runFile.text();
             const data = JSON.parse(text);
-            console.log(data);
 
-            //will observe if might need to change some of these
+            // step 2 — extract the data we want to store
             const extracted = {
+                // we also send the user_id so backend knows who uploaded it
+                user_id: user.uid,
+
                 //VITAL RUN INFO
+                play_id: data.play_id,
                 character: data.character_chosen,
                 ascension: data.ascension_level,
-                floorReached: data.floor_reached,
+                floor_reached: data.floor_reached,
                 victory: data.victory,
                 playtime: data.playtime,
-                playId: data.play_id,
 
                 //NEOW BONUS
                 neow: {
@@ -112,7 +118,7 @@ export default function UploadRunPage() {
                     choices: data.campfire_choices,
                 },
 
-                //MERCHANT 
+                //MERCHANT
                 shop: {
                     purchased: data.items_purchased,
                     purchaseFloors: data.item_purchase_floors,
@@ -127,7 +133,7 @@ export default function UploadRunPage() {
                     perFloor: data.path_per_floor,
                 },
 
-                //GOLD & HP per FLOOR
+                //GOLD & HP PER FLOOR
                 stats: {
                     currentHpPerFloor: data.current_hp_per_floor,
                     maxHpPerFloor: data.max_hp_per_floor,
@@ -149,20 +155,41 @@ export default function UploadRunPage() {
                     blue: data.blue_key_relic_skipped_log,
                 },
             };
-            console.log("EXTRACTED:", extracted);
-            const storageRef = ref(
-                storage,
-                `runs/${user.uid}/${Date.now()}-${runFile.name}`
-            );
+
+            // step 3 — send extracted data to our Express backend to save in Neon
+            const response = await fetch(`${API_URL}/api/runs`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(extracted),
+            });
+
+            const result = await response.json();
+
+            // if backend returned an error (like duplicate run)
+            if (!response.ok) {
+                setMessage(result.error || "Failed to save run.");
+                setIsUploading(false);
+                return;
+            }
+
+            // step 4 — also upload the raw file to Firebase Storage as a backup
+            const storageRef = ref(storage, `runs/${user.uid}/${Date.now()}-${runFile.name}`);
             await uploadBytes(storageRef, runFile);
-            alert("Upload successful!");
+
+            // step 5 — all done! reset everything
+            setMessage("Run uploaded successfully!");
             setRunFile(null);
             fileInputRef.current.value = "";
             setIsDragging(false);
+
         } catch (err) {
             console.error(err);
-            alert("Upload failed.");
+            setMessage("Something went wrong. Please try again.");
         }
+
+        setIsUploading(false);
     };
 
     return (
@@ -172,7 +199,7 @@ export default function UploadRunPage() {
                 Upload your Slay the Spire run file below.
             </p>
 
-            {/* upload file box */}
+            {/* drag and drop upload box */}
             <div
                 onClick={handleClick}
                 onDragOver={handleDragOver}
@@ -186,7 +213,7 @@ export default function UploadRunPage() {
                     borderRadius: "10px",
                     background: isDragging ? "#f4e1c1" : "#fff8f0",
                     cursor: "pointer",
-                    transition: "all 0.2s ease"
+                    transition: "all 0.2s ease",
                 }}
             >
                 <p style={{ color: "#5a1e1e", marginBottom: "10px" }}>
@@ -198,22 +225,36 @@ export default function UploadRunPage() {
                 <input
                     type="file"
                     ref={fileInputRef}
-                    accept=".run,.json" //might have to change after testing
+                    accept=".run,.json"
                     style={{ display: "none" }}
                     onChange={handleFileChange}
                 />
+                {/* show selected file name */}
                 {runFile && (
                     <p style={{ marginTop: "15px", color: "#5a1e1e" }}>
                         Selected: {runFile.name}
                     </p>
                 )}
             </div>
+
+            {/* success or error message */}
+            {message && (
+                <p style={{
+                    color: message.includes("successfully") ? "#5cb85c" : "#d9534f",
+                    marginTop: "10px",
+                    fontWeight: "600",
+                }}>
+                    {message}
+                </p>
+            )}
+
+            {/* submit button — disabled while uploading or no file selected */}
             <button
                 className="btn btn-success mt-3"
                 onClick={handleUpload}
-                disabled={!runFile}
+                disabled={!runFile || isUploading}
             >
-                Submit Run
+                {isUploading ? "Uploading..." : "Submit Run"}
             </button>
         </div>
     );
