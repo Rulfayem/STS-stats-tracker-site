@@ -197,28 +197,15 @@
     border-radius: 6px;
     transition: all 0.2s ease;
     letter-spacing: 0.03em;
-    outline: none !important;
-    box-shadow: none !important;
 }
 
 .btn-edit-profile:hover {
     background: linear-gradient(135deg, #f2c572, #c8923a);
     color: #5a1e1e;
     transform: translateY(-1px);
-    outline: none !important;
-    box-shadow: none !important;
 }
 
-/* removes blue outline on focus/click entirely (maybe broken fix later) */
-.btn-edit-profile:focus,
-.btn-edit-profile:active,
-.btn-edit-profile:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* disabled state  */
+/* disabled state */
 .btn-edit-profile:disabled {
     background: #6e5e50 !important;
     color: #cfc3b3 !important;
@@ -226,7 +213,6 @@
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none !important;
 }
 
 /* label for each section inside edit modal */

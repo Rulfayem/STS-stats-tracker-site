@@ -1,7 +1,6 @@
 /* universally keep this please */
 body {
   margin: 0;
-
   /* background image shown on every page */
   background-image: url("/images/Slay-the-Spire-Banner.jpg");
   background-size: cover;
@@ -52,7 +51,6 @@ body::before {
 }
 
 /* ===== GOLD RETURN HOME BUTTON in ERROR PAGE ===== */
-
 .btn-error-gold {
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -77,9 +75,7 @@ body::before {
       #ffd98a 40%,
       #e6a94a 60%,
       #c47f2a 100%) !important;
-
   transform: translateY(-2px);
-
   box-shadow:
     inset 0 2px 6px rgba(255, 255, 255, 0.6),
     0 6px 14px rgba(200, 140, 60, 0.6);
@@ -88,15 +84,7 @@ body::before {
 /* clicked */
 .btn-error-gold:active {
   transform: translateY(0);
-
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.2),
     0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* removes bootstrap blue outline globally */
-*:focus,
-*:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
 }
