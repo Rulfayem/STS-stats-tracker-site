@@ -329,7 +329,7 @@ export default function ProfilePage() {
                             className="edit-banner-img"
                         />
                     </div>
-                    <label className="btn btn-upload-run mt-2 mb-4">
+                    <label className="btn-choose-image mt-2 mb-4">
                         Choose Banner Image
                         <input
                             type="file"
@@ -348,7 +348,7 @@ export default function ProfilePage() {
                             className="edit-pfp-img"
                         />
                     </div>
-                    <label className="btn btn-upload-run mt-2">
+                    <label className="btn-choose-image mt-2">
                         Choose Profile Picture
                         <input
                             type="file"
@@ -376,7 +376,7 @@ export default function ProfilePage() {
 
                     {/* save changes button */}
                     <Button
-                        className="btn-edit-profile"
+                        className="btn-save-changes"
                         onClick={handleSaveProfile}
                         disabled={isSaving || (!newBannerFile && !newPFPFile)}
                     >

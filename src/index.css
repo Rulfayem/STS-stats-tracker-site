@@ -93,3 +93,10 @@ body::before {
     inset 0 2px 6px rgba(0, 0, 0, 0.2),
     0 2px 6px rgba(0, 0, 0, 0.2);
 }
+
+/* removes bootstrap blue outline globally */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
