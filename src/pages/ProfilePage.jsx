@@ -1,13 +1,18 @@
+/* eslint-disable no-unused-vars */
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../firebase";
 import { useUser } from "../context/UserContext";
+import { Modal, Button } from "react-bootstrap";
 import "../styles/profilepage.css";
 
 const defaultBanner = "/images/Slay-the-Spire-Banner.jpg";
 const defaultPFP = "/images/Ironclad-PFP.png";
 
+//the 4 characters
 const characters = [
     { name: "THE_IRONCLAD", label: "Ironclad", image: "/images/Ironclad-Sprite.webp" },
     { name: "THE_SILENT", label: "The Silent", image: "/images/Silent-Sprite.webp" },
@@ -15,7 +20,7 @@ const characters = [
     { name: "WATCHER", label: "Watcher", image: "/images/Watcher-Sprite.webp" },
 ];
 
-//formats playtime in seconds into visually appealing hours + minutes 
+//formats playtime in seconds into visually appealing hours + minutes
 function formatPlaytime(seconds) {
     if (!seconds) return "0m";
     const hours = Math.floor(seconds / 3600);
@@ -26,11 +31,22 @@ function formatPlaytime(seconds) {
 
 export default function ProfilePage() {
     const { username } = useParams();
-    const { userProfile } = useUser();
+    const { user, userProfile } = useUser();
+
     const [profileData, setProfileData] = useState(null);
+    const [profileUid, setProfileUid] = useState(null);
     const [runs, setRuns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
+
+    //edit profile modal states
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [newBannerFile, setNewBannerFile] = useState(null);
+    const [newPFPFile, setNewPFPFile] = useState(null);
+    const [bannerPreview, setBannerPreview] = useState(null);
+    const [pfpPreview, setPFPPreview] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveMessage, setSaveMessage] = useState("");
 
     const isOwnProfile = userProfile?.username === username;
     const API_URL = import.meta.env.VITE_API_URL;
@@ -49,9 +65,11 @@ export default function ProfilePage() {
                     setNotFound(true);
                     return;
                 }
+
                 const foundProfile = querySnap.docs[0].data();
                 const foundUid = querySnap.docs[0].id;
                 setProfileData(foundProfile);
+                setProfileUid(foundUid);
 
                 const response = await fetch(`${API_URL}/api/runs/user/${foundUid}`);
                 const runsData = await response.json();
@@ -64,7 +82,7 @@ export default function ProfilePage() {
         };
         fetchProfile();
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username]);
 
     //calculating general profile stats
@@ -88,6 +106,77 @@ export default function ProfilePage() {
             winRate: charWinRate,
         };
     });
+
+    //changing banner display a preview
+    const handleBannerChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setNewBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+    };
+
+    //changing pfp display a preview
+    const handlePFPChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setNewPFPFile(file);
+        setPFPPreview(URL.createObjectURL(file));
+    };
+
+    //uploads new image(s) to firebase storage and updates firestore with the new URL(s)
+    const handleSaveProfile = async () => {
+        if (!user) return;
+        setIsSaving(true);
+        setSaveMessage("");
+
+        try {
+            const updates = {};
+
+            //for new banner
+            if (newBannerFile) {
+                const bannerRef = ref(storage, `banners/${user.uid}/banner`);
+                await uploadBytes(bannerRef, newBannerFile);
+                const bannerURL = await getDownloadURL(bannerRef);
+                updates.bannerImage = bannerURL;
+            }
+
+            //for new pfp
+            if (newPFPFile) {
+                const pfpRef = ref(storage, `profilePictures/${user.uid}/pfp`);
+                await uploadBytes(pfpRef, newPFPFile);
+                const pfpURL = await getDownloadURL(pfpRef);
+                updates.profilePicture = pfpURL;
+            }
+
+            //only runs if there are changes
+            if (Object.keys(updates).length > 0) {
+                const userDocRef = doc(db, "users", user.uid);
+                await updateDoc(userDocRef, updates);
+                setProfileData((prev) => ({ ...prev, ...updates }));
+                setTimeout(() => window.location.reload(), 2000);
+            }
+            setSaveMessage("Profile updated successfully!");
+            setNewBannerFile(null);
+            setNewPFPFile(null);
+            setBannerPreview(null);
+            setPFPPreview(null);
+        } catch (err) {
+            console.error("Error saving profile:", err);
+            setSaveMessage("Something went wrong. Please try again.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    //resets modal
+    const handleCloseModal = () => {
+        setShowEditModal(false);
+        setNewBannerFile(null);
+        setNewPFPFile(null);
+        setBannerPreview(null);
+        setPFPPreview(null);
+        setSaveMessage("");
+    };
 
     if (loading) {
         return (
@@ -122,9 +211,21 @@ export default function ProfilePage() {
                         alt="Profile Picture"
                         className="profile-pfp"
                     />
-                    <h2 className="profile-username">{profileData?.username}</h2>
+                    <div>
+                        <h2 className="profile-username">{profileData?.username}</h2>
+                        {isOwnProfile && (
+                            <span className="profile-own-badge">Your Profile</span>
+                        )}
+                    </div>
+
+                    {/* edit profile button only shows on own profile */}
                     {isOwnProfile && (
-                        <span className="profile-own-badge">Your Profile</span>
+                        <Button
+                            className="btn-edit-profile ms-3"
+                            onClick={() => setShowEditModal(true)}
+                        >
+                            Edit Profile
+                        </Button>
                     )}
                 </div>
             </div>
@@ -165,6 +266,26 @@ export default function ProfilePage() {
                             <p className="stat-value">{formatPlaytime(totalPlaytime)}</p>
                         </div>
                     </div>
+
+                    {/* temporary placeholder, filled in later */}
+                    <div className="col-6 col-md-3">
+                        <div className="stat-card">
+                            <p className="stat-label">Coming Soon</p>
+                            <p className="stat-value">—</p>
+                        </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                        <div className="stat-card">
+                            <p className="stat-label">Coming Soon</p>
+                            <p className="stat-value">—</p>
+                        </div>
+                    </div>
+                    <div className="col-6 col-md-3">
+                        <div className="stat-card">
+                            <p className="stat-label">Coming Soon</p>
+                            <p className="stat-value">—</p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* character win rates */}
@@ -191,6 +312,78 @@ export default function ProfilePage() {
                 </div>
 
             </div>
+
+            {/* EDIT PROFILE MODAL */}
+            <Modal show={showEditModal} onHide={handleCloseModal} centered size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Profile</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+
+                    {/* banner image section */}
+                    <p className="edit-section-label">Banner Image</p>
+                    <div className="edit-banner-preview">
+                        <img
+                            src={bannerPreview || profileData?.bannerImage || defaultBanner}
+                            alt="Banner Preview"
+                            className="edit-banner-img"
+                        />
+                    </div>
+                    <label className="btn btn-upload-run mt-2 mb-4">
+                        Choose Banner Image
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handleBannerChange}
+                        />
+                    </label>
+
+                    {/* profile picture section */}
+                    <p className="edit-section-label">Profile Picture</p>
+                    <div className="edit-pfp-preview">
+                        <img
+                            src={pfpPreview || profileData?.profilePicture || defaultPFP}
+                            alt="Profile Picture Preview"
+                            className="edit-pfp-img"
+                        />
+                    </div>
+                    <label className="btn btn-upload-run mt-2">
+                        Choose Profile Picture
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={handlePFPChange}
+                        />
+                    </label>
+
+                    {/* save result message */}
+                    {saveMessage && (
+                        <p style={{
+                            color: saveMessage.includes("successfully") ? "#5cb85c" : "#d9534f",
+                            marginTop: "15px",
+                            fontWeight: "600",
+                        }}>
+                            {saveMessage}
+                        </p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseModal}>
+                        Cancel
+                    </Button>
+
+                    {/* save changes button */}
+                    <Button
+                        className="btn-edit-profile"
+                        onClick={handleSaveProfile}
+                        disabled={isSaving || (!newBannerFile && !newPFPFile)}
+                    >
+                        {isSaving ? "Saving..." : "Save Changes"}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }

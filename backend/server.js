@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/runs", runsRouter);
-app.use("/api/favorites", favouritesRouter);
+app.use("/api/favourites", favouritesRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
