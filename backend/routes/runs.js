@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
             ]
         );
 
-        //ignores dupplicate runs
+        //ignores duplicate runs
         if (result.rows.length === 0) {
             return res.status(409).json({ error: "This run has already been uploaded." });
         }

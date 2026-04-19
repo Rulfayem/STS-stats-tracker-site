@@ -15,7 +15,7 @@ const characters = [
     { name: "WATCHER", label: "Watcher", image: "/images/Watcher-Sprite.webp" },
 ];
 
-//formats playtime in seconds into visually appealing hours + minutes (check later maybe broken)
+//formats playtime in seconds into visually appealing hours + minutes 
 function formatPlaytime(seconds) {
     if (!seconds) return "0m";
     const hours = Math.floor(seconds / 3600);
@@ -26,7 +26,7 @@ function formatPlaytime(seconds) {
 
 export default function ProfilePage() {
     const { username } = useParams();
-    const { user, userProfile } = useUser(); //question later
+    const { userProfile } = useUser();
     const [profileData, setProfileData] = useState(null);
     const [runs, setRuns] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,12 +42,11 @@ export default function ProfilePage() {
 
             try {
                 const usersRef = collection(db, "users");
-                const q = query(usersRef, where("username", "==", username)); //question
-                const querySnap = await getDocs(q);
+                const userQuery = query(usersRef, where("username", "==", username));
+                const querySnap = await getDocs(userQuery);
 
                 if (querySnap.empty) {
                     setNotFound(true);
-                    setLoading(false); //ask need this?
                     return;
                 }
                 const foundProfile = querySnap.docs[0].data();
@@ -64,6 +63,8 @@ export default function ProfilePage() {
             }
         };
         fetchProfile();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username]);
 
     //calculating general profile stats
@@ -71,7 +72,7 @@ export default function ProfilePage() {
     const totalWins = runs.filter((r) => r.victory).length;
     const totalLosses = totalRuns - totalWins;
     const overallWinRate = totalRuns > 0 ? ((totalWins / totalRuns) * 100).toFixed(1) : "0.0";
-    const totalPlaytime = runs.reduce((sum, r) => sum + (r.play_time || 0), 0);
+    const totalPlaytime = runs.reduce((sum, r) => sum + (r.playtime || 0), 0);
 
     //calculates win rate per character
     const characterStats = characters.map((char) => {
