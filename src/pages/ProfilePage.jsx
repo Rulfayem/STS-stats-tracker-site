@@ -14,7 +14,7 @@ const defaultPFP = "/images/Ironclad-PFP.png";
 
 //the 4 characters
 const characters = [
-    { name: "THE_IRONCLAD", label: "Ironclad", image: "/images/Ironclad-Sprite.webp" },
+    { name: "IRONCLAD", label: "Ironclad", image: "/images/Ironclad-Sprite.webp" },
     { name: "THE_SILENT", label: "The Silent", image: "/images/Silent-Sprite.webp" },
     { name: "DEFECT", label: "Defect", image: "/images/Defect-Sprite.webp" },
     { name: "WATCHER", label: "Watcher", image: "/images/Watcher-Sprite.webp" },

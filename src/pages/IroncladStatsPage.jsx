@@ -6,7 +6,7 @@ import { db } from "../firebase";
 import "../styles/characterstats.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const CHARACTER = "THE_IRONCLAD";
+const CHARACTER = "IRONCLAD";
 const SPIRE_BASE = "https://spire-codex.com";
 const cardPlaceholder = "/images/temp_missing_card.png";
 
