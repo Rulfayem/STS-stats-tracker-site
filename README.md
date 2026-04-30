@@ -48,7 +48,7 @@ A community-driven stats tracking web app for **Slay the Spire 1**. Users can up
 ## Features
 
 - **User Authentication** — Sign up and log in with email and password via Firebase Auth - certain features require login
-- **Run File Upload** — Drag and drop single files, multiple files, or entire folders of `.run` files. Duplicate runs are automatically detected and skipped
+- **Run File Upload** — Drag and drop single files, multiple files, or even entire folders of `.run` files. Duplicate runs are automatically detected and ignored
 - **Community Stats Pages** — Each character page displays the most picked cards and highest winrate cards calculated from all uploaded community runs, with card art and descriptions from the Spire Codex API
 - **Act 4 Leaderboard** — Top 5 players with the highest Act 4 clear-rate per character, with clickable links to their profiles
 - **Profile Page** — Displays a user's total runs, wins, losses, overall win rate, total playtime, and win rate broken down by character

@@ -1,26 +1,28 @@
 /* eslint-disable no-unused-vars */
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../firebase";
 import { useUser } from "../context/UserContext";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Row, Col, Card, Spinner } from "react-bootstrap";
 import "../styles/profilepage.css";
 
 const defaultBanner = "/images/Slay-the-Spire-Banner.jpg";
 const defaultPFP = "/images/Ironclad-PFP.png";
+const cardPlaceholder = "/images/temp_missing_card.png";
+const SPIRE_BASE = "https://spire-codex.com";
+const API_URL = import.meta.env.VITE_API_URL;
 
 //the 4 characters
 const characters = [
-    { name: "IRONCLAD", label: "Ironclad", image: "/images/Ironclad-Sprite.webp" },
+    { name: "THE_IRONCLAD", label: "Ironclad", image: "/images/Ironclad-Sprite.webp" },
     { name: "THE_SILENT", label: "The Silent", image: "/images/Silent-Sprite.webp" },
     { name: "DEFECT", label: "Defect", image: "/images/Defect-Sprite.webp" },
     { name: "WATCHER", label: "Watcher", image: "/images/Watcher-Sprite.webp" },
 ];
 
-//formats playtime in seconds into visually appealing hours + minutes
+//formats playtime in seconds into hours + minutes
 function formatPlaytime(seconds) {
     if (!seconds) return "0m";
     const hours = Math.floor(seconds / 3600);
@@ -28,6 +30,26 @@ function formatPlaytime(seconds) {
     if (hours === 0) return `${minutes}m`;
     return `${hours}h ${minutes}m`;
 }
+
+//converts STS thing name to spire-codex id format for use
+const toSpireId = (name) => {
+    return name
+        .replace(/\+\d+$/, "")
+        .trim()
+        .replace(/([a-z])([A-Z])/g, "$1_$2")
+        .toUpperCase()
+        .replace(/\s+/g, "_")
+        .replace(/-/g, "_");
+};
+
+//removes [gold] tags from spire-codex card descriptions
+const cleanDesc = (desc) => {
+    if (!desc) return "";
+    return desc
+        .replace(/\[\/?\w+\]/g, "")
+        .replace(/\\n/g, " ")
+        .trim();
+};
 
 export default function ProfilePage() {
     const { username } = useParams();
@@ -39,6 +61,9 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [notFound, setNotFound] = useState(false);
 
+    const [favourites, setFavourites] = useState([]);
+    const [favouriteCardData, setFavouriteCardData] = useState({});
+
     //edit profile modal states
     const [showEditModal, setShowEditModal] = useState(false);
     const [newBannerFile, setNewBannerFile] = useState(null);
@@ -48,8 +73,12 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
 
+    const [newFavName, setNewFavName] = useState("");
+    const [newFavType, setNewFavType] = useState("card");
+    const [favError, setFavError] = useState("");
+    const [isAddingFav, setIsAddingFav] = useState(false);
+
     const isOwnProfile = userProfile?.username === username;
-    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -71,9 +100,47 @@ export default function ProfilePage() {
                 setProfileData(foundProfile);
                 setProfileUid(foundUid);
 
-                const response = await fetch(`${API_URL}/api/runs/user/${foundUid}`);
-                const runsData = await response.json();
+                //fetch runs AND favourites at the same time
+                const [runsRes, favsRes] = await Promise.all([
+                    fetch(`${API_URL}/api/runs/user/${foundUid}`),
+                    fetch(`${API_URL}/api/favourites/${foundUid}`),
+                ]);
+
+                const runsData = await runsRes.json();
+
+                //safety protocol - experienced crashes
+                let safeFavsData = [];
+                try {
+                    if (favsRes.ok) {
+                        const favsData = await favsRes.json();
+                        safeFavsData = Array.isArray(favsData) ? favsData : [];
+                    }
+                } catch {
+                    safeFavsData = [];
+                }
                 setRuns(runsData);
+                setFavourites(safeFavsData);
+
+                //fetch spire-codex data for each favourite item
+                const spireData = {};
+                await Promise.all(
+                    safeFavsData.map(async (fav) => {
+                        const spireId = toSpireId(fav.item_name);
+                        const endpoint = fav.item_type === "card"
+                            ? `${SPIRE_BASE}/api/cards/${spireId}`
+                            : `${SPIRE_BASE}/api/relics/${spireId}`;
+                        try {
+                            const res = await fetch(endpoint);
+                            if (res.ok) {
+                                const data = await res.json();
+                                spireData[fav.id] = data;
+                            }
+                        } catch {
+                            //silent fail
+                        }
+                    })
+                );
+                setFavouriteCardData(spireData);
             } catch (err) {
                 console.error("Error fetching profile:", err);
             } finally {
@@ -81,8 +148,6 @@ export default function ProfilePage() {
             }
         };
         fetchProfile();
-
-        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username]);
 
     //calculating general profile stats
@@ -99,15 +164,80 @@ export default function ProfilePage() {
         const charWinRate = charRuns.length > 0
             ? ((charWins / charRuns.length) * 100).toFixed(1)
             : null;
-        return {
-            ...char,
-            runs: charRuns.length,
-            wins: charWins,
-            winRate: charWinRate,
-        };
+        return { ...char, runs: charRuns.length, wins: charWins, winRate: charWinRate };
     });
 
-    //changing banner display a preview
+    const favouriteCards = favourites.filter((f) => f.item_type === "card");
+    const favouriteRelics = favourites.filter((f) => f.item_type === "relic");
+
+    //adds a new favourite card OR relic
+    const handleAddFavourite = async () => {
+        setFavError("");
+
+        if (!newFavName.trim()) return setFavError("Please enter a name.");
+
+        const limit = newFavType === "card" ? 4 : 4;
+        const current = newFavType === "card" ? favouriteCards.length : favouriteRelics.length;
+
+        if (current >= limit) {
+            return setFavError(`You can only have 4 favourite ${newFavType}s.`);
+        }
+
+        setIsAddingFav(true);
+        try {
+            const response = await fetch(`${API_URL}/api/favourites`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: user.uid,
+                    item_name: newFavName.trim(),
+                    item_type: newFavType,
+                }),
+            });
+
+            const result = await response.json();
+            if (!response.ok) return setFavError(result.error || "Failed to add favourite.");
+
+            const newFav = result.favorite;
+
+            //fetch spire-codex data for the added item
+            const spireId = toSpireId(newFav.item_name);
+            const endpoint = newFavType === "card"
+                ? `${SPIRE_BASE}/api/cards/${spireId}`
+                : `${SPIRE_BASE}/api/relics/${spireId}`;
+            try {
+                const spireRes = await fetch(endpoint);
+                if (spireRes.ok) {
+                    const spireData = await spireRes.json();
+                    setFavouriteCardData((prev) => ({ ...prev, [newFav.id]: spireData }));
+                }
+            } catch {
+                //silently fail..?
+            }
+            setFavourites((prev) => [...prev, newFav]);
+            setNewFavName("");
+        } catch (err) {
+            setFavError("Something went wrong.");
+        }
+        setIsAddingFav(false);
+    };
+
+    //remove a favourite item
+    const handleRemoveFavourite = async (favId) => {
+        try {
+            await fetch(`${API_URL}/api/favourites/${favId}`, { method: "DELETE" });
+            setFavourites((prev) => prev.filter((f) => f.id !== favId));
+            setFavouriteCardData((prev) => {
+                const updated = { ...prev };
+                delete updated[favId];
+                return updated;
+            });
+        } catch (err) {
+            console.error("Error removing favourite:", err);
+        }
+    };
+
+    //handles banner image selection and preview
     const handleBannerChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -115,7 +245,7 @@ export default function ProfilePage() {
         setBannerPreview(URL.createObjectURL(file));
     };
 
-    //changing pfp display a preview
+    //handles profile picture selection and preview
     const handlePFPChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -123,7 +253,7 @@ export default function ProfilePage() {
         setPFPPreview(URL.createObjectURL(file));
     };
 
-    //uploads new image(s) to firebase storage and updates firestore with the new URL(s)
+    //saves images to firebase storage and updates firestore
     const handleSaveProfile = async () => {
         if (!user) return;
         setIsSaving(true);
@@ -176,6 +306,8 @@ export default function ProfilePage() {
         setBannerPreview(null);
         setPFPPreview(null);
         setSaveMessage("");
+        setNewFavName("");
+        setFavError("");
     };
 
     if (loading) {
@@ -229,6 +361,7 @@ export default function ProfilePage() {
                     )}
                 </div>
             </div>
+
             <div className="profile-divider" />
 
             {/* USER STATS SECTION */}
@@ -290,15 +423,11 @@ export default function ProfilePage() {
 
                 {/* character win rates */}
                 <h4 className="profile-section-title">Win Rate by Character</h4>
-                <div className="row g-3">
+                <div className="row g-3 mb-5">
                     {characterStats.map((char) => (
                         <div className="col-6 col-md-3" key={char.name}>
                             <div className="character-stat-card">
-                                <img
-                                    src={char.image}
-                                    alt={char.label}
-                                    className="char-stat-image"
-                                />
+                                <img src={char.image} alt={char.label} className="char-stat-image" />
                                 <p className="char-stat-name">{char.label}</p>
                                 <p className="char-stat-winrate">
                                     {char.winRate !== null ? `${char.winRate}%` : "No runs"}
@@ -310,6 +439,72 @@ export default function ProfilePage() {
                         </div>
                     ))}
                 </div>
+
+                {/* FAVOURITES SECTION */}
+
+                {/* favourite card(s) */}
+                <h4 className="profile-section-title">Favourite Cards</h4>
+                {favouriteCards.length === 0 ? (
+                    <p className="profile-empty-fav">No favourite cards added yet.</p>
+                ) : (
+                    <Row className="g-3 mb-4">
+                        {favouriteCards.map((fav) => {
+                            const spireData = favouriteCardData[fav.id];
+                            return (
+                                <Col xs={6} md={3} key={fav.id}>
+                                    <Card className="fav-card">
+                                        <div className="fav-img-wrapper">
+                                            <img
+                                                src={spireData?.image_url ? `${SPIRE_BASE}${spireData.image_url}` : cardPlaceholder}
+                                                alt=""
+                                                className="fav-img"
+                                                onError={(e) => { e.target.src = cardPlaceholder; }}
+                                            />
+                                        </div>
+                                        <Card.Body className="fav-body">
+                                            <p className="fav-name">{fav.item_name}</p>
+                                            {spireData?.description && (
+                                                <p className="fav-desc">{cleanDesc(spireData.description)}</p>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            );
+                        })}
+                    </Row>
+                )}
+
+                {/* favourite relic(s) */}
+                <h4 className="profile-section-title">Favourite Relics</h4>
+                {favouriteRelics.length === 0 ? (
+                    <p className="profile-empty-fav">No favourite relics added yet.</p>
+                ) : (
+                    <Row className="g-3 mb-4">
+                        {favouriteRelics.map((fav) => {
+                            const spireData = favouriteCardData[fav.id];
+                            return (
+                                <Col xs={6} md={3} key={fav.id}>
+                                    <Card className="fav-card">
+                                        <div className="fav-img-wrapper">
+                                            <img
+                                                src={spireData?.image_url ? `${SPIRE_BASE}${spireData.image_url}` : cardPlaceholder}
+                                                alt=""
+                                                className="fav-img"
+                                                onError={(e) => { e.target.src = cardPlaceholder; }}
+                                            />
+                                        </div>
+                                        <Card.Body className="fav-body">
+                                            <p className="fav-name">{fav.item_name}</p>
+                                            {spireData?.description && (
+                                                <p className="fav-desc">{cleanDesc(spireData.description)}</p>
+                                            )}
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            );
+                        })}
+                    </Row>
+                )}
 
             </div>
 
@@ -331,12 +526,7 @@ export default function ProfilePage() {
                     </div>
                     <label className="btn-choose-image mt-2 mb-4">
                         Choose Banner Image
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: "none" }}
-                            onChange={handleBannerChange}
-                        />
+                        <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleBannerChange} />
                     </label>
 
                     {/* profile picture section */}
@@ -348,33 +538,94 @@ export default function ProfilePage() {
                             className="edit-pfp-img"
                         />
                     </div>
-                    <label className="btn-choose-image mt-2">
+                    <label className="btn-choose-image mt-2 mb-4">
                         Choose Profile Picture
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: "none" }}
-                            onChange={handlePFPChange}
-                        />
+                        <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePFPChange} />
                     </label>
 
                     {/* save result message */}
                     {saveMessage && (
-                        <p style={{
-                            color: saveMessage.includes("successfully") ? "#5cb85c" : "#d9534f",
-                            marginTop: "15px",
-                            fontWeight: "600",
-                        }}>
+                        <p style={{ color: saveMessage.includes("successfully") ? "#5cb85c" : "#d9534f", marginBottom: "15px", fontWeight: "600" }}>
                             {saveMessage}
                         </p>
+                    )}
+
+                    <hr style={{ borderColor: "#b26a4a" }} />
+
+                    {/* FAVOURITES SECTION IN MODAL */}
+                    <p className="edit-section-label">Favourite Cards & Relics</p>
+                    <p style={{ fontSize: "0.85rem", color: "#b26a4a" }}>
+                        Up to 4 favourite cards and 4 favourite relics. Type the exact name as it appears in game.
+                    </p>
+
+                    {/* add new favourite input */}
+                    <div className="d-flex gap-2 mb-3 flex-wrap">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder={`Enter ${newFavType} name e.g. ${newFavType === "card" ? "Footwork" : "Burning Blood"}`}
+                            value={newFavName}
+                            onChange={(e) => setNewFavName(e.target.value)}
+                            style={{ maxWidth: "260px" }}
+                        />
+                        {/* toggle between card and relic */}
+                        <select
+                            className="form-select"
+                            value={newFavType}
+                            onChange={(e) => setNewFavType(e.target.value)}
+                            style={{ maxWidth: "110px" }}
+                        >
+                            <option value="card">Card</option>
+                            <option value="relic">Relic</option>
+                        </select>
+                        <button
+                            className="btn-choose-image"
+                            onClick={handleAddFavourite}
+                            disabled={isAddingFav}
+                        >
+                            {isAddingFav ? "Adding..." : "Add"}
+                        </button>
+                    </div>
+                    {favError && <p style={{ color: "#d9534f", fontSize: "0.85rem" }}>{favError}</p>}
+
+                    {/* current favourite cards list */}
+                    <p style={{ fontWeight: "700", color: "#5a2d1f", marginBottom: "6px" }}>
+                        Favourite Cards ({favouriteCards.length}/4)
+                    </p>
+                    {favouriteCards.length === 0 ? (
+                        <p style={{ color: "#b26a4a", fontSize: "0.85rem", marginBottom: "10px" }}>None added yet.</p>
+                    ) : (
+                        <div className="fav-list mb-3">
+                            {favouriteCards.map((fav) => (
+                                <div key={fav.id} className="fav-list-item">
+                                    <span>{fav.item_name}</span>
+                                    <button className="fav-remove-btn" onClick={() => handleRemoveFavourite(fav.id)}>✕</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* current favourite relics list */}
+                    <p style={{ fontWeight: "700", color: "#5a2d1f", marginBottom: "6px" }}>
+                        Favourite Relics ({favouriteRelics.length}/4)
+                    </p>
+                    {favouriteRelics.length === 0 ? (
+                        <p style={{ color: "#b26a4a", fontSize: "0.85rem" }}>None added yet.</p>
+                    ) : (
+                        <div className="fav-list">
+                            {favouriteRelics.map((fav) => (
+                                <div key={fav.id} className="fav-list-item">
+                                    <span>{fav.item_name}</span>
+                                    <button className="fav-remove-btn" onClick={() => handleRemoveFavourite(fav.id)}>✕</button>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>
-                        Cancel
+                        Close
                     </Button>
-
-                    {/* save changes button */}
                     <Button
                         className="btn-save-changes"
                         onClick={handleSaveProfile}
