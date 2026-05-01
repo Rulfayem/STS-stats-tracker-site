@@ -196,7 +196,12 @@ export default function ProfilePage() {
             });
 
             const result = await response.json();
-            if (!response.ok) return setFavError(result.error || "Failed to add favourite.");
+            console.log("Add favourite response:", response.status, result); //temporary log debugging
+            if (!response.ok) {
+                setFavError(result.error || "Failed to add favourite.");
+                setIsAddingFav(false);
+                return;
+            }
 
             const newFav = result.favorite;
 
