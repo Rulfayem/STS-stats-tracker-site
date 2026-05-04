@@ -4,7 +4,7 @@ import { storage } from "../firebase";
 import { ref, uploadBytes } from "firebase/storage";
 import { auth } from "../firebase";
 
-//the URL of our backend stored in .env so its easy to change when we deploy
+//the URL of the backend stored in .env so its easy to change when we deploy
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UploadRunPage() {
@@ -310,7 +310,6 @@ export default function UploadRunPage() {
                     {message}
                 </p>
             )}
-
         </Container>
     );
 }

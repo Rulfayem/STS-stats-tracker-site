@@ -74,7 +74,6 @@ router.post("/", async (req, res) => {
     }
 });
 
-
 //fetches all runs for a specific character
 router.get("/:character", async (req, res) => {
     const { character } = req.params;
@@ -90,7 +89,6 @@ router.get("/:character", async (req, res) => {
         res.status(500).json({ error: "Something went wrong fetching runs." });
     }
 });
-
 
 //fetches all runs uploaded by a specific user
 router.get("/user/:user_id", async (req, res) => {

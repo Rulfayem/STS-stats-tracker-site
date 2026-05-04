@@ -66,7 +66,6 @@ router.get("/:user_id", async (req, res) => {
     }
 });
 
-
 //updates user's favourite item
 router.put("/:id", async (req, res) => {
     const { id } = req.params;
@@ -103,7 +102,6 @@ router.put("/:id", async (req, res) => {
         res.status(500).json({ error: "Something went wrong updating your favourite." });
     }
 });
-
 
 //remove user's favourite item
 router.delete("/:id", async (req, res) => {

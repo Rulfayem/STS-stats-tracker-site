@@ -591,6 +591,9 @@ export default function ProfilePage() {
                             {isAddingFav ? "Adding..." : "Add"}
                         </button>
                     </div>
+                    <p style={{ color: "#b26a4a", fontSize: "0.8rem", fontStyle: "italic", marginBottom: "8px" }}>
+                        ⚠️ Name must match exactly as it appears in game e.g. Footwork, Burning Blood
+                    </p>
                     {favError && <p style={{ color: "#d9534f", fontSize: "0.85rem" }}>{favError}</p>}
 
                     {/* current favourite cards list */}
