@@ -25,7 +25,6 @@ A community-driven stats tracking web app for **Slay the Spire 1**. Users can up
 - **React Router** — client-side routing
 - **React Bootstrap** — UI components
 - **Firebase** — authentication, Firestore (user profiles), Storage (images)
-- **Axios** — HTTP requests
 
 ### Backend
 - **Node.js + Express** — REST API server
